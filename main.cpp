@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <cstring>
+#include <iomanip>
 #include "Node.h"
 #include "Student.h"
 
@@ -12,7 +13,7 @@ using namespace std;
 void add(Node*& head, Node* prev, Node* current, student* student);
 void print(Node*& head, Node* next);
 void Delete(Node*& head, Node* prev, Node* current, int ID);
-
+void average(Node*& head, Node* current, float total, int it);
 
 int main(){
 
@@ -25,7 +26,7 @@ int main(){
   //loop forever
   while (go == true){
     input[0] = '\0';
-    cout<<"ADD, DELETE, or PRINT? "<<endl;
+    cout<<"Enter ADD, DELETE, PRINT, AVERAGE, or QUIT "<<endl;
     cin>>input;
     cin.ignore();
     //add and ask for inputs
@@ -35,14 +36,14 @@ int main(){
       char inName[15];
       int inID;
   
-      cout<<"GPA of student?";
-      cin>>inGPA;
-      cin.ignore();
-      cout<<"Name of student?";
+      cout<<"Name of student? ";
       cin.get(inName, 14);
       cin.ignore();
-      cout<< "ID of student?";
-      cin>>inID;
+      cout<<"ID of student? ";
+      cin>>inID;      
+      cin.ignore();
+      cout<< "GPA of student? ";
+      cin>>inGPA;
       cin.ignore();
       //create student pointer to assign to this node
       student* s = new student(inGPA, inName, inID);
@@ -61,6 +62,19 @@ int main(){
       cin>>ID;
       
       Delete(head, NULL, head, ID);
+    }
+    if(strcmp(input, "AVERAGE") == 0){
+      average(head, head, 0, 0);
+    }
+    if(strcmp(input, "QUIT") == 0){
+      //iterate through
+      while(head != NULL){
+	Node* toDelete = head;
+	head = head->getNext();
+	delete toDelete;
+      }
+      
+      return 0;
     }
   }
   
@@ -151,13 +165,7 @@ void Delete(Node*& head, Node* prev, Node* current, int ID){
       delete current;
       return;
     }
-    //DETERMINE WHERE WE ARE IN LIST, beginning, middle end?
 
-    
-    //delete current;
-    
-    
-    // delete current; // simply delete the Node*, this USES destructor in class then will reset head and remend connections 
     return;
   }
 
@@ -169,4 +177,36 @@ void Delete(Node*& head, Node* prev, Node* current, int ID){
     cout<<"No matching ID in list, try again"<<endl;
   }
   
+}
+
+void average(Node*& head, Node* current, float total, int it){
+
+  //if nothing in list
+  if(head == NULL){
+    cout<<"No students in list to average!"<<endl;
+    return;
+  }
+  //if only one in list, average is that GPA
+  if(current == head && current->getNext() == NULL){
+    cout<<fixed;
+    cout<<setprecision(2);
+    cout<<"Average: " << current->getStudent()->getGPA() << endl;
+    return;
+  }
+
+  //if reached end of list and collected all GPAs 
+  if(current == NULL){
+    float calculatedAverage = total/it;
+    cout<<fixed;
+    cout<<setprecision(2);
+    cout<<"Average: " << calculatedAverage <<endl;
+    return;
+  }
+  student* s = current->getStudent();
+  total += s->getGPA();
+  it++;
+  average(head, current->getNext(), total, it);
+
+  //
+
 }
