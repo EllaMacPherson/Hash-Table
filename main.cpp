@@ -1,5 +1,5 @@
-/* Ella MacPherson 12/19/25
-   Linked List part 1
+/* Ella MacPherson 1/12/25
+   Linked List part 2
 */
 
 #include <iostream>
@@ -11,7 +11,7 @@ using namespace std;
 
 void add(Node*& head, Node* prev, Node* current, student* student);
 void print(Node*& head, Node* next);
-void Delete(Node*& head, Node* next, float GPA);
+void Delete(Node*& head, Node* prev, Node* current, int ID);
 
 
 int main(){
@@ -54,13 +54,13 @@ int main(){
     if(strcmp(input, "PRINT") == 0){
       print(head, head);
     }
-    //delete -> only works for 1 node in list just testing destructor
+
     if(strcmp(input, "DELETE") == 0){
-      cout<<"Enter GPA to delete"<<endl;
-      float inGPA = 0;
-      cin>>inGPA;
+      cout<<"Enter student ID to delete"<<endl;
+      int ID = 0;
+      cin>>ID;
       
-      Delete(head, head, inGPA);
+      Delete(head, NULL, head, ID);
     }
   }
   
@@ -68,7 +68,7 @@ int main(){
 }
 
 
-//add func, do i need HEAD?
+//add func DONE, do i need HEAD, yes to set new node
 void add(Node*& head, Node* prev, Node* current, student* student){
   //head is always head, current is the one we are looking at at the moment.
   
@@ -96,13 +96,11 @@ void add(Node*& head, Node* prev, Node* current, student* student){
       newNode->setNext(current);
       prev->setNext(newNode);
       
-    }
-    //when the next thing is null, set the 
-    
+    }    
   }
 }
 
-//print func
+//print func DONE
 void print(Node*& head, Node* current){
   if(current == head){ //on first one print 
     cout<<"List: ";
@@ -116,25 +114,59 @@ void print(Node*& head, Node* current){
   }
 }
 
-//delete func, ONLY works with 1 node at the moment
-void Delete(Node*& head, Node* next, float GPA){
+//delete func DONE ONLY need to delete first node with matching GPA in the list! USE DESTRUCTOR!!!!!!!!!!!
+void Delete(Node*& head, Node* prev, Node* current, int ID){
 
-  if(next == head){ //first call
+  if(current == head){ //first call
     cout<<"Matches found: ";
   }
 
-  if(next == NULL){ //when nothing in list
-    cout<<"No students currently in list"<<endl;
+  if(current == NULL){ //when nothing in list
+    cout<<"No students currently in list!"<<endl;
     return;
   }
 
-  //if finds GPA
-  if(next->getStudent()->getGPA() == GPA){
-    cout<<next->getStudent()->getName()<<" " <<endl;
-    delete next;
-    head = NULL; //for 1 student manually set it like this
+  //if finds GPA --> RUN RECURSION AND DELETE
+  if(current->getStudent()->getID() == ID){
+    cout<<current->getStudent()->getName()<<" " <<endl;
+    //RUN DELETION and exit func
+    //DETERMINE WHERE WE ARE IN THE LIST
+    if(prev == NULL){ // delete like beginning of list
+      head = current->getNext();
+      delete current;
+      return;
+    }
+    else if(current->getNext() == NULL){ //delete like end of list
+      if(prev == NULL){ //if only item in list
+	delete current;
+	head = NULL;
+	return;
+      }
+      prev->setNext(NULL);
+      delete current;
+      return;
+    }
+    else{ //delete like middle of the list
+      prev->setNext(current->getNext()); //set one before to one after current
+      delete current;
+      return;
+    }
+    //DETERMINE WHERE WE ARE IN LIST, beginning, middle end?
+
+    
+    //delete current;
+    
+    
+    // delete current; // simply delete the Node*, this USES destructor in class then will reset head and remend connections 
     return;
   }
-  //recursively call again with next node
-  Delete(head,next->getNext(), GPA);
+
+  if(current->getNext() != NULL){ //look at next one if it's there!
+    prev = current;
+    Delete(head, prev, current->getNext(), ID);
+  }
+  else{ //if no ID in list truly
+    cout<<"No matching ID in list, try again"<<endl;
+  }
+  
 }
