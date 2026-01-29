@@ -1,5 +1,5 @@
-/* Ella MacPherson 1/12/25
-   Linked List part 2
+/* Ella MacPherson 2/23/25
+   Hash Tables
 */
 
 #include <iostream>
@@ -10,22 +10,30 @@
 
 using namespace std;
 
-// Function decleration
+// remenant linked list code
 void add(Node*& head, Node* prev, Node* current, student* student);
 void print(Node*& head, Node* next);
 void Delete(Node*& head, Node* prev, Node* current, int ID);
 
-void insert(Node* hashtable[], student* newStudent); 
-int hashFunc(Node* hashtable[], int size);
+//for hashtable
+void insert(Node**& hashtable, student* newStudent); 
+int hashFunc(int ID, int size);
 
 
 int main(){
 
   Node** hashtable; //type of array
-  hashtable = new node*[100]; //initial array -> DO I NEED TO PUT THIS IN A CLAsS/CONSTRCTOR??
+  hashtable = new Node*[99]; //initial array -> DO I NEED TO PUT THIS IN A CLAsS/CONSTRCTOR??
   //how do i change and rehash it in the future
 
+  //fill table with NULL head pointers
+  for(int i = 0; i < 100; i++){
 
+    hashtable[i] = NULL;
+  }
+
+
+  
   
   char input[10];
   bool go = true;
@@ -36,12 +44,13 @@ int main(){
   //loop forever
   while (go == true){
     //clear input
+    
     input[0] = '\0';
     cout<<"Enter ADD, DELETE, PRINT or QUIT "<<endl;
     cin>>input;
     cin.ignore();
     
-    //check input
+    // insert new manual data into hash table
     if(strcmp(input, "ADD") == 0) {
       //They want to add so collect all inputs
       float inGPA = 0;
@@ -61,9 +70,6 @@ int main(){
       //create student pointer to assign to this node
       student* s = new student(inGPA, inName, inID);
       insert(hashtable, s);
-      
-      //assign that pointer and sort ID with add function
-      //add(head, NULL, head, s);
     }
 
     //print
@@ -98,17 +104,31 @@ int main(){
   }
 }
 
-void insert(Node* hastable[size], student* s){
+void insert(Node**& hashtable, student* s){
+  cout<<"insert func running"<<endl;
+
   int valueToHash = s->getID();
-  int i = hashfunc(valueToHash);
-  hashtable[i] = student* s; //this puts student there HANDLE LINKED LIST THO!!!
+  int i = hashFunc(valueToHash, 100);
 
+  cout<<"index: " << i <<endl;
 
+  
+  Node* current = hashtable[i];
+  if(current == NULL){ //if current bucket is EMPTY just insert it there
+    hashtable[i] = new Node(s);
+    cout<<"bucket: "<<i <<"content: " << s->getName()<< " " <<s->getID()<<endl; 
+    return;
+  }else{ //THERES A COLLOISION, LL it
+    while(current->getNext() != NULL){
+      current = current->getNext();
+    }
+  }
+  current->setNext(new Node(s));
+  return;
 }
 
-int hashFunc(int key, int size){
-  int index = key % size; 
-
+int hashFunc(int ID, int size){
+  int index = ID % size; 
   return index;
 }
 
