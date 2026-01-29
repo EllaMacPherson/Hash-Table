@@ -14,11 +14,19 @@ using namespace std;
 void add(Node*& head, Node* prev, Node* current, student* student);
 void print(Node*& head, Node* next);
 void Delete(Node*& head, Node* prev, Node* current, int ID);
-void average(Node*& head, Node* current, float total, int it);
+
+void insert(Node* hashtable[], student* newStudent); 
+int hashFunc(Node* hashtable[], int size);
 
 
 int main(){
 
+  Node** hashtable; //type of array
+  hashtable = new node*[100]; //initial array -> DO I NEED TO PUT THIS IN A CLAsS/CONSTRCTOR??
+  //how do i change and rehash it in the future
+
+
+  
   char input[10];
   bool go = true;
 
@@ -29,7 +37,7 @@ int main(){
   while (go == true){
     //clear input
     input[0] = '\0';
-    cout<<"Enter ADD, DELETE, PRINT, AVERAGE, or QUIT "<<endl;
+    cout<<"Enter ADD, DELETE, PRINT or QUIT "<<endl;
     cin>>input;
     cin.ignore();
     
@@ -52,9 +60,10 @@ int main(){
       
       //create student pointer to assign to this node
       student* s = new student(inGPA, inName, inID);
+      insert(hashtable, s);
       
       //assign that pointer and sort ID with add function
-      add(head, NULL, head, s);
+      //add(head, NULL, head, s);
     }
 
     //print
@@ -73,10 +82,6 @@ int main(){
       Delete(head, NULL, head, ID);
     }
     
-    //Average function
-    if(strcmp(input, "AVERAGE") == 0){
-      average(head, head, 0, 0);
-    }
     //Quit program
     if(strcmp(input, "QUIT") == 0){
 
@@ -93,10 +98,26 @@ int main(){
   }
 }
 
+void insert(Node* hastable[size], student* s){
+  int valueToHash = s->getID();
+  int i = hashfunc(valueToHash);
+  hashtable[i] = student* s; //this puts student there HANDLE LINKED LIST THO!!!
 
-//add func
+
+}
+
+int hashFunc(int key, int size){
+  int index = key % size; 
+
+  return index;
+}
+
+
+//add func ->takes student pointer and puts it in correct list position
 void add(Node*& head, Node* prev, Node* current, student* student){
 
+
+  /*
   // just add when list is empty
   if(current == NULL){
     head = new Node(student);
@@ -128,6 +149,7 @@ void add(Node*& head, Node* prev, Node* current, student* student){
       
     }    
   }
+  */
 }
 
 //print func
@@ -200,34 +222,4 @@ void Delete(Node*& head, Node* prev, Node* current, int ID){
 }
 
 
-//average function
-void average(Node*& head, Node* current, float total, int it){
 
-  //if nothing in list
-  if(head == NULL){
-    cout<<"No students in list to average!"<<endl;
-    return;
-  }
-  //if only one in list, average is that GPA
-  if(current == head && current->getNext() == NULL){
-    cout<<fixed;
-    cout<<setprecision(2);
-    cout<<"Average: " << current->getStudent()->getGPA() << endl;
-    return;
-  }
-
-  //if reached end of list and collected all GPAs 
-  if(current == NULL){
-    float calculatedAverage = total/it; //total kept track of total GPAs, it, # of iterations and do average formula
-    cout<<fixed;
-    cout<<setprecision(2);
-    cout<<"Average: " << calculatedAverage <<endl;
-    return;
-  }
-
-  //do each node thats not at end
-  student* s = current->getStudent();
-  total += s->getGPA(); //add current student to total
-  it++;
-  average(head, current->getNext(), total, it);
-}
