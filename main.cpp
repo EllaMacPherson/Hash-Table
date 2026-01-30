@@ -16,9 +16,10 @@ void print(Node*& head, Node* next);
 void Delete(Node*& head, Node* prev, Node* current, int ID);
 
 //for hashtable
-void insert(Node**& hashtable, student* newStudent, int size); 
-int hashFunc(int ID, int size);
-void printHT(Node**& hashtable, int size);
+void insert(Node**& hashtable, student* newStudent, int& size); 
+int hashFunc(int ID, int& size);
+void printHT(Node**& hashtable, int& size);
+void rehash(Node**& hashtable, student* newStudent, int& size);
 
 
 int main(){
@@ -77,6 +78,7 @@ int main(){
     //print
     if(strcmp(input, "PRINT") == 0){
       //      print(head, head);
+      cout<<"got print command.. about to call print"<<endl;
       printHT(hashtable, size);
     }
 
@@ -107,61 +109,115 @@ int main(){
   }
 }
 
-void insert(Node**& hashtable, student* s, int size){
-  cout<<"insert func running"<<endl;
+void insert(Node**& hashtable, student* s, int& size){
+  //  cout<<"insert func running"<<endl;
 
   int valueToHash = s->getID();
   int i = hashFunc(valueToHash, size);
 
-  cout<<"index: " << i <<endl;
+  //  cout<<"index: " << i <<endl;
 
   
   Node* current = hashtable[i];
   if(current == NULL){ //if current bucket is EMPTY just insert it there
     hashtable[i] = new Node(s);
-    cout<<"bucket: "<<i <<"content: " << s->getName()<< " " <<s->getID()<<endl; 
+    //  cout<<"bucket: "<<i <<"content: " << s->getName()<< " " <<s->getID()<<endl; 
     return;
-  }else{ //THERES A COLLOISION, LL it, and sort by ID with code from linked list
-    //cout<<"adding to same bucket"<<endl;
-    //if(current->getID() == s->getID){
-      //      cout<<"IDS in bucket are same"<<endl;
-      //}else{
-      //      cout<<"its different ID with same key, sorting it" <<endl;
-
-    //DOES THIS WORK FOR ADDING SAME IDS TO BUCKET, check after rud print done???
-
-    add(hashtable[i], NULL, hashtable[i], s);
-      //    }
+  }else{
+    //if 2nd slot open
+    if(current->getNext() == NULL){
+      add(hashtable[i], NULL, hashtable[i], s);
+      return;
+    }
+    else{
+      //if 3rd slot opem
+      if(current->getNext()->getNext() == NULL){
+	add(hashtable[i], NULL, hashtable[i], s);
+	return;
+      }
+      //if all slots FULL!! REHASHA TIMEEE
+      else{
+	//	cout<<"calling rehash"<<endl;
+	rehash(hashtable, s, size); //makes a new hashtable, sets hashtable = to it, reinitializes everything, adds our new student
+	return;
+      }
+    }
+    
     return;
   }
-  //current->setNext(new Node(s));
-  //return;
 }
 
-int hashFunc(int ID, int size){
+int hashFunc(int ID, int& size){
   int index = ID % size; 
   return index;
 }
 
-void printHT(Node**& hashtable, int size){
+void rehash(Node**& currentHT, student* newStudent, int& size){
+  int oldSize = size;
+  cout<<"rehash RUNING"<<endl;
+  size = (size * 2) + 1;
+  cout<<"new array size: " << size<< endl;
+  
+  Node** newHT;
+  newHT = new Node*[size];
+  //fill it will null pointers
+  for(int i = 0; i < size; i++){
+    newHT[i] = NULL;
+  }
+
+  //iniialize it with old current HT
+  cout<<"reinitalizing array"<<endl;
+  
+  for(int i = 0; i < oldSize; i++){
+    if(currentHT[i] != NULL){    //if theres something there
+      student* s = currentHT[i]->getStudent(); //take the student thats there
+      insert(newHT, s, size); //insert it in new hashtable
+      if(currentHT[i]->getNext() != NULL){
+	s = currentHT[i]->getNext()->getStudent();
+	insert(newHT, s, size);
+	if(currentHT[i]->getNext()->getNext() != NULL){
+	  s = currentHT[i]->getNext()->getNext()->getStudent();
+	  insert(newHT, s, size);
+	}
+      }
+    }
+  }
 
 
-   cout<<"print func running"<<endl;
+  cout<<"adding new student manually"<<endl;
+  //add student that needed to be added initially...!
+  insert(newHT, newStudent, size);
+
+  cout<<"setting currentHT equal to the new one js created"<<endl;
+  //update current hashtable to be this new hashtable
+  currentHT = newHT;
+  cout<<"rehash complete"<<endl;
+
+}
+
+
+void printHT(Node**& hashtable, int& size){
+  //cout<<"running printHT"<<endl;
+  //cout<<"size: "<<size<<endl;
+  
   for(int i = 0; i < size; i++){
     //  cout<<"for loop iteration: " << i <<endl;
     //THERE MUST BE A BETTER WAY????? do i have to use recursion??
-
+    //    cout<<"iteration: "<< i <<endl;
     Node* current;
     if(hashtable[i] != NULL){ //if theres something there print it!
-      cout<<hashtable[i]->getStudent()->getName()<<" ";
+      //cout<<"SOMETHING HERE!"<<endl;
+      cout<<"List: " << hashtable[i]->getStudent()->getName()<<" ";
       if(hashtable[i]->getNext() != NULL){ //2nd one in LL 
 	cout<<hashtable[i]->getNext()->getStudent()->getName()<< " ";
 	current = hashtable[i]->getNext();
 	if(current->getNext() != NULL){ //3rd one in LL
-	  cout<<current->getNext()->getStudent()->getName()<<endl;
+	  cout<<current->getNext()->getStudent()->getName();
 	}
       }
+      cout<<endl;
     }
+    
   }
 }
 
