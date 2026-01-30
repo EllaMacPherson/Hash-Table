@@ -16,18 +16,20 @@ void print(Node*& head, Node* next);
 void Delete(Node*& head, Node* prev, Node* current, int ID);
 
 //for hashtable
-void insert(Node**& hashtable, student* newStudent); 
+void insert(Node**& hashtable, student* newStudent, int size); 
 int hashFunc(int ID, int size);
+void printHT(Node**& hashtable, int size);
 
 
 int main(){
 
   Node** hashtable; //type of array
-  hashtable = new Node*[99]; //initial array -> DO I NEED TO PUT THIS IN A CLAsS/CONSTRCTOR??
+  hashtable = new Node*[100]; //initial array -> DO I NEED TO PUT THIS IN A CLAsS/CONSTRCTOR??
+  int size = 100;
   //how do i change and rehash it in the future
 
   //fill table with NULL head pointers
-  for(int i = 0; i < 100; i++){
+  for(int i = 0; i < size; i++){
 
     hashtable[i] = NULL;
   }
@@ -69,12 +71,13 @@ int main(){
       
       //create student pointer to assign to this node
       student* s = new student(inGPA, inName, inID);
-      insert(hashtable, s);
+      insert(hashtable, s, size);
     }
 
     //print
     if(strcmp(input, "PRINT") == 0){
-      print(head, head);
+      //      print(head, head);
+      printHT(hashtable, size);
     }
 
     //delete
@@ -104,11 +107,11 @@ int main(){
   }
 }
 
-void insert(Node**& hashtable, student* s){
+void insert(Node**& hashtable, student* s, int size){
   cout<<"insert func running"<<endl;
 
   int valueToHash = s->getID();
-  int i = hashFunc(valueToHash, 100);
+  int i = hashFunc(valueToHash, size);
 
   cout<<"index: " << i <<endl;
 
@@ -118,13 +121,21 @@ void insert(Node**& hashtable, student* s){
     hashtable[i] = new Node(s);
     cout<<"bucket: "<<i <<"content: " << s->getName()<< " " <<s->getID()<<endl; 
     return;
-  }else{ //THERES A COLLOISION, LL it
-    while(current->getNext() != NULL){
-      current = current->getNext();
-    }
+  }else{ //THERES A COLLOISION, LL it, and sort by ID with code from linked list
+    //cout<<"adding to same bucket"<<endl;
+    //if(current->getID() == s->getID){
+      //      cout<<"IDS in bucket are same"<<endl;
+      //}else{
+      //      cout<<"its different ID with same key, sorting it" <<endl;
+
+    //DOES THIS WORK FOR ADDING SAME IDS TO BUCKET, check after rud print done???
+
+    add(hashtable[i], NULL, hashtable[i], s);
+      //    }
+    return;
   }
-  current->setNext(new Node(s));
-  return;
+  //current->setNext(new Node(s));
+  //return;
 }
 
 int hashFunc(int ID, int size){
@@ -132,49 +143,67 @@ int hashFunc(int ID, int size){
   return index;
 }
 
+void printHT(Node**& hashtable, int size){
 
+
+   cout<<"print func running"<<endl;
+  for(int i = 0; i < size; i++){
+    //  cout<<"for loop iteration: " << i <<endl;
+    //THERE MUST BE A BETTER WAY????? do i have to use recursion??
+
+    Node* current;
+    if(hashtable[i] != NULL){ //if theres something there print it!
+      cout<<hashtable[i]->getStudent()->getName()<<" ";
+      if(hashtable[i]->getNext() != NULL){ //2nd one in LL 
+	cout<<hashtable[i]->getNext()->getStudent()->getName()<< " ";
+	current = hashtable[i]->getNext();
+	if(current->getNext() != NULL){ //3rd one in LL
+	  cout<<current->getNext()->getStudent()->getName()<<endl;
+	}
+      }
+    }
+  }
+}
+
+
+//does this work when IDS are equal??? i swear it worked in LL
 //add func ->takes student pointer and puts it in correct list position
 void add(Node*& head, Node* prev, Node* current, student* student){
 
 
-  /*
-  // just add when list is empty
-  if(current == NULL){
-    head = new Node(student);
-  }
-  else{ //list has at least one node    
-    if(current->getStudent()->getID() < student->getID()){ //Check if ID is greater than, we must continue if so
-      if(current->getNext() == NULL){ //if student ID is still GREATER Than the one its currently on, but th next is NULL, then we must add it at end of list!!! Don't want current to ever equal NULL excpet for when list is truly empty. So must check in advance here if we're at the end and the ID is still greater
-	//If case is true, then we want our last node to be this one, as it is the greatest in the list
-	current->setNext(new Node(student));
-	return;
-      }
-      //If not true, recursively call add function again, store previous for storing in middle of the list later
-      prev = current;
-      add(head, prev, current->getNext(), student);
+  if(current->getStudent()->getID() < student->getID()){ //Check if ID is greater than, we must continue if so
+    if(current->getNext() == NULL){ //if student ID is still GREATER Than the one its currently on, but th next is NULL, then we must add it at end of list!!! Don't want current to ever equal NULL excpet for when list is truly empty. So must check in advance here if we're at the end and the ID is still greater
+      //If case is true, then we want our last node to be this one, as it is the greatest in the list
+      current->setNext(new Node(student));
+      //      cout<<"set in same bucket, prev: " << prev->getStudent()->getName()<<endl;
+      return;
     }
-    else{ //ID is LESS than next one, so we must insert it here
-      if(prev == NULL){ //If previous is NULL, then we are at head of list and must reset head
-	Node* newNode = new Node(student); //create new node
-	newNode->setNext(current); //push current node back
-	head = newNode; //update head as this new node
-	return; //exit function
-      }
-
-      //If program is here - We are inserting in the middle of the list
-
-      Node* newNode = new Node(student); //create placeholder for our node
-      newNode->setNext(current); //set next as current (we are 1 ahead of where it should be)
-      prev->setNext(newNode); //set previous as linked to this node now!
-      
-    }    
+    //If not true, recursively call add function again, store previous for storing in middle of the list later
+    prev = current;
+    add(head, prev, current->getNext(), student);
   }
-  */
+  else{ //ID is LESS than next one, so we must insert it here
+    if(prev == NULL){ //If previous is NULL, then we are at head of list and must reset head
+      Node* newNode = new Node(student); //create new node
+      newNode->setNext(current); //push current node back
+      head = newNode; //update head as this new node
+      //cout<<"set in same bucket, prev: " << prev->getStudent()->getName()<<endl;
+      return; //exit function
+    }
+    
+    //If program is here - We are inserting in the middle of the list
+    
+    Node* newNode = new Node(student); //create placeholder for our node
+    newNode->setNext(current); //set next as current (we are 1 ahead of where it should be)
+    prev->setNext(newNode); //set previous as linked to this node now!
+    //cout<<"set in same bucket, prev: " << prev->getStudent()->getName()<<endl;
+    
+  }    
 }
 
 //print func
 void print(Node*& head, Node* current){
-
+  
   if(current == head){ //on first one print 
     cout<<"List: ";
   }
