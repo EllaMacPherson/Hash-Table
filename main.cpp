@@ -1,5 +1,6 @@
 /* Ella MacPherson 2/13/25
    Hash Tables
+   Student-list but with hashtable
 */
 
 #include <iostream>
@@ -13,63 +14,62 @@
 
 using namespace std;
 
-// remenant linked list code
-void add(Node*& head, Node* prev, Node* current, student* student); //USES!!
-void print(Node*& head, Node* next); //doesnt use atm
-void Delete(Node*& head, Node* prev, Node* current, int ID); //USES!!!
+// remenant linked list code declartions;
+void add(Node*& head, Node* prev, Node* current, student* student); //reused in HT insertion
+void Delete(Node*& head, Node* prev, Node* current, int ID); //reused in HT deletion
 
-//for hashtable
+// hashtable function declartion
 void insert(Node**& hashtable, student* newStudent, int& size); 
 int hashFunc(int ID, int& size);
 void printHT(Node**& hashtable, int& size);
 void rehash(Node**& hashtable, student* newStudent, int& size);
-void randomAdd(int num, int size, Node**& hashtable);
+void randomAdd(int num, int& size, Node**& hashtable, int& j);
 void deleteHT(Node**& hashtable, int& size, int xID);
 
 
 int main(){
 
-  Node** hashtable; //type of array
-  hashtable = new Node*[100]; //initial array -> DO I NEED TO PUT THIS IN A CLAsS/CONSTRCTOR??
+  //initalize hashtable array
+  Node** hashtable;
+  hashtable = new Node*[100];
+
+  //creat variable to hold current size of hashtable
   int size = 100;
-  //how do i change and rehash it in the future
 
   //fill table with NULL head pointers
   for(int i = 0; i < size; i++){
     hashtable[i] = NULL;
   }
 
-
-  
-  
+  //input string, loop var
   string input;
   bool go = true;
+  
+  //counter for # times random has been called so it doesnt add the same numbers over and over and cause rehash mayham
+  int j = 0;
 
-  //start with list empty
-  Node* head = NULL;
-
-  //loop forever
+  //running loop
   while (go == true){
+
     //clear input
     input.clear();
 
     cout<<"Enter ADD, DELETE, PRINT, RANDOM or QUIT "<<endl;
 
+    //get input
     getline(cin, input);
 
-    
-    // insert new manual data into hash table
+    // manual data add
     if(input == "ADD") {
-      //They want to add so collect all inputs
+      
+      // Initialize all input
       float inGPA = 0;
       string inName;
       int inID;
 
-      
+      // Gather...
       cout<<"Name of student? ";
-
       getline(cin, inName);
-
       cout<<"ID of student? ";
       cin>>inID;      
       cin.ignore();
@@ -77,31 +77,37 @@ int main(){
       cin>>inGPA;
       cin.ignore();
       
-      //create student pointer to assign to this node
+      //create student pointer to insert
       student* s = new student(inGPA, inName, inID);
+      //call insert function
       insert(hashtable, s, size);
     }
 
-    //print
+    //print table
     if(input =="PRINT"){
       printHT(hashtable, size);
     }
 
+    //Randomly add X students
     if(input == "RANDOM"){
+      //store how many they want to add
       int num;
       cout<<"How many students would you like to add?"<<endl;
       cin>>num;
       cin.ignore();
-      randomAdd(num, size, hashtable);
+
+      //generate and insert them!
+      randomAdd(num, size, hashtable, j);
     }
     
     //delete
     if(input == "DELETE" ){
-      //gather input
+      //gather ID 
       cout<<"Enter student ID to delete"<<endl;
       int ID = 0;
       cin>>ID;
       cin.ignore();
+      
       //delete function
       deleteHT(hashtable, size, ID);
     }
@@ -110,11 +116,22 @@ int main(){
     if(input == "QUIT"){
 
       //iterate through
-      while(head != NULL){
-	Node* toDelete = head;
-	head = head->getNext();
-	delete toDelete; //delete every node
+      for(int i = 0; i > size; i++){
+	if(hashtable[i] != NULL){ //if theres something there delete it
+	  if(hashtable[i]->getNext() != NULL){ //
+	    if(hashtable[i]->getNext()->getNext() != NULL){
+	      delete hashtable[i]->getNext()->getNext();
+	      delete hashtable[i]->getNext();
+	      delete hashtable[i];
+	    }
+	    delete hashtable[i]->getNext();
+	    delete hashtable[i];
+	  }
+	}
+	delete hashtable[i];
       }
+
+      delete[] hashtable; //delete array once all Node* deleted
 
       //exit main!
       return 0;
@@ -122,67 +139,62 @@ int main(){
   }
 }
 
+// delete from hashtable
 void deleteHT(Node**& hashtable, int& size, int deleteID){
-  //iterate through hashtable
+
+  //find index ID will be stored at
   int index = hashFunc(deleteID, size);
-  
+
+  //iterate through to that index
   for(int i = 0; i < size; i++){
-    if(i == index){ //check 1st
+    if(i == index){
+      //delete from linked list
       Delete(hashtable[i], NULL, hashtable[i], deleteID);
     }
   }
   
-  return;
-
+  return; //mission accomplished
 }
 
 
-//randomly adds x number of students. 1 in like 100 end up with only first name -> ASK GALBRATITH
-void randomAdd(int num, int size, Node**& hashtable){
+//randomly adds x number of students
+void randomAdd(int num, int& size, Node**& hashtable, int& j){
+
   //repeat this for # of people wanted to be added to program
-
-
-
   for(int i; i < num; i++){
-    //randomly generate 1 # for first name and another # for last
-    //random generator set up..
+
+    //reset file definitions so getline doesnt save
     ifstream firstFile("first.txt");
     ifstream lastFile("last.txt");
 
+    //random generator initialize
     random_device rd;
     mt19937 gen(rd());
-
-
     uniform_int_distribution<int> idDist(1, 99);
     uniform_real_distribution<float> GPAdist(0.0f, 4.0f);
 
-    //generate name!!!
+    
+    //generate name indexs
     int first = idDist(gen);
     int last = idDist(gen);
-    //    cout<<"first random number index: " <<first<<endl;
-    //    cout<<"second random number index: " <<last<<endl;
 
-    //keeping it in cstring cause whole project built around it..
-
+    //utilize those beautiful strings, NOT cstrings
     string firstname = "";
     string lastname = "";
 
-
+    //index of file
     int current = 0;
 
-    // If you want 1-based indexing (line 1 = first line), keep this
-    // If you want 0-based (line 0 = first line), change to current < targetIndex
+    //get to correct line
     while (current < first && getline(firstFile, firstname)) {
         ++current;
     }
-
+    //save in first name once there
     if (current == first) {
       getline(firstFile, firstname);
     }
 
-    //    cout<<"current: "<<current<<endl; 
-    //cout<<"first name with that number : " <<firstname<<endl;
-    
+    //same thing for last name
     int currentLast = 0;
     while (currentLast < last && getline(lastFile, lastname)) {
         ++currentLast;
@@ -192,106 +204,102 @@ void randomAdd(int num, int size, Node**& hashtable){
       getline(lastFile, lastname);
     }
 
-    //    cout<<"lastindex: "<<currentLast<<endl; 
-
-    //    cout<<"lastname with that number: " <<lastname<<endl;
-
-
-    
+    //smoosh em together
     string fullName = "";
     fullName = firstname + " " + lastname;
-    //    cout<<"Full name: " <<fullName<<endl;
     
     //incremental ID
-    int ID = 400201 + (3*i);
+    int ID = 400201 + (3*i) + (7*j);
     
     //randomly generate a GPA
     float GPA = GPAdist(gen);
 
-    //    cout<<"ADDING STUDENT"<<endl;
+
     //make a new student with all this info
     student* s = new student(GPA, fullName, ID);
 
     //feed into insert func
     insert(hashtable, s, size);
   }
+
+  //change j so in future doesnt repeat ID's exactly
+  j++;
   return;
 
 }
 
 
+//insert a student into the hashtable 
 void insert(Node**& hashtable, student* s, int& size){
-  //  cout<<"insert func running"<<endl;
 
+  //get index to store at
   int valueToHash = s->getID();
   int i = hashFunc(valueToHash, size);
 
-  //  cout<<"index: " << i <<endl;
-
-  
+  //create a current Node* to look at current index
   Node* current = hashtable[i];
-  if(current == NULL){ //if current bucket is EMPTY just insert it there
+
+  //if current bucket is EMPTY just insert it there
+  if(current == NULL){
+    //create a new node for that student at that location
     hashtable[i] = new Node(s);
-    //  cout<<"bucket: "<<i <<"content: " << s->getName()<< " " <<s->getID()<<endl; 
     return;
+    
   }else{
     //if 2nd slot open
     if(current->getNext() == NULL){
-      add(hashtable[i], NULL, hashtable[i], s);
+      add(hashtable[i], NULL, hashtable[i], s); //add like a LL (this sorts by ID which is unnecessary but not detrimental
       return;
     }
     else{
       //if 3rd slot opem
       if(current->getNext()->getNext() == NULL){
-	add(hashtable[i], NULL, hashtable[i], s);
+	add(hashtable[i], NULL, hashtable[i], s); //add like a LL
 	return;
       }
-      //if all slots FULL!! REHASHA TIMEEE
+      //if all slots FULL!! REHASH TIME!
       else{
-	//	cout<<"calling rehash"<<endl;
 	rehash(hashtable, s, size); //makes a new hashtable, sets hashtable = to it, reinitializes everything, adds our new student
 	return;
       }
     }
-    
     return;
   }
 }
 
+//quick lil hash func
 int hashFunc(int ID, int& size){
   int index = ID % size; 
   return index;
 }
 
-//often overloads again and again if you add to much and then program just aborts
-//if i add 1 person in the beginning, and then add the max (300), it clears away the first 1!!!
-//always rehashes twice on first force ADD 300 + man add 1
-//THE SIZE IS FIXED AT 100 BUCKETS??????
+//rehash function
 void rehash(Node**& currentHT, student* newStudent, int& size){
+  //store old size
   int oldSize = size;
-  //  cout<<"rehash RUNING"<<endl;
+
+  //create new size
   size = (size * 2) + 1;
-  cout<<"rehashing to size: "<<size<<endl;
-  //cout<<"new array size: " << size<< endl;
-  
+  cout<<"rehashing to size: "<<size<<endl; //keeping debug comment cause it makes it clear to user
+
+  //create NEW hashtable of NEW size!
   Node** newHT;
   newHT = new Node*[size];
+  
   //fill it will null pointers
   for(int i = 0; i < size; i++){
     newHT[i] = NULL;
   }
 
-  //iniialize it with old current HT
-  //cout<<"reinitalizing array"<<endl;
-  
+  //fill it with elements in old HT
   for(int i = 0; i < oldSize; i++){
     if(currentHT[i] != NULL){    //if theres something there
       student* s = currentHT[i]->getStudent(); //take the student thats there
       insert(newHT, s, size); //insert it in new hashtable
-      if(currentHT[i]->getNext() != NULL){
+      if(currentHT[i]->getNext() != NULL){ //do again if possible
 	s = currentHT[i]->getNext()->getStudent();
 	insert(newHT, s, size);
-	if(currentHT[i]->getNext()->getNext() != NULL){
+	if(currentHT[i]->getNext()->getNext() != NULL){ //do thrice if possible
 	  s = currentHT[i]->getNext()->getNext()->getStudent();
 	  insert(newHT, s, size);
 	}
@@ -300,10 +308,10 @@ void rehash(Node**& currentHT, student* newStudent, int& size){
   }
 
 
-  // cout<<"adding new student manually"<<endl;
-  //add student that needed to be added initially...!
+  //add student that needed to be added initially...! into the new HT of course
   insert(newHT, newStudent, size);
 
+  delete[] currentHT;
   //cout<<"setting currentHT equal to the new one js created"<<endl;
   //update current hashtable to be this new hashtable
   currentHT = newHT;
@@ -311,21 +319,17 @@ void rehash(Node**& currentHT, student* newStudent, int& size){
 
 }
 
-
+//print!
 void printHT(Node**& hashtable, int& size){
-  //cout<<"running printHT"<<endl;
-
   
   for(int i = 0; i < size; i++){
-    //  cout<<"for loop iteration: " << i <<endl;
-    //THERE MUST BE A BETTER WAY????? do i have to use recursion??
-    //    cout<<"iteration: "<< i <<endl;
 
+    //make GPAs prettier #thank you imanip
     cout << fixed << setprecision(2);
 
+    //create current so last one is less messy
     Node* current;
     if(hashtable[i] != NULL){ //if theres something there print it!
-      //cout<<"SOMETHING HERE!"<<endl;
       cout<<i<<" ";
       cout<<"1.  ";
       cout<< hashtable[i]->getStudent()->getName()<<" "<<
@@ -348,14 +352,12 @@ void printHT(Node**& hashtable, int& size){
     }
     
   }
-  //  cout<<"size: "<<size<<endl;
 }
 
 
-//does this work when IDS are equal??? i swear it worked in LL
-//add func ->takes student pointer and puts it in correct list position
-void add(Node*& head, Node* prev, Node* current, student* student){
 
+//add func a little extra for this project but its left over from LL and it works dandy
+void add(Node*& head, Node* prev, Node* current, student* student){
 
   if(current->getStudent()->getID() < student->getID()){ //Check if ID is greater than, we must continue if so
     if(current->getNext() == NULL){ //if student ID is still GREATER Than the one its currently on, but th next is NULL, then we must add it at end of list!!! Don't want current to ever equal NULL excpet for when list is truly empty. So must check in advance here if we're at the end and the ID is still greater
@@ -387,22 +389,7 @@ void add(Node*& head, Node* prev, Node* current, student* student){
   }    
 }
 
-//print func
-void print(Node*& head, Node* current){
-  
-  if(current == head){ //on first one print 
-    cout<<"List: ";
-  }
-
-  if(current != NULL){ //if we are not at last one in list
-    cout<<current->getStudent()->getName()<<", ";
-    cout<<current->getStudent()->getID()<<", ";
-    cout<<current->getStudent()->getGPA()<<"  ";
-    print(head,current->getNext()); //call func again but 1 more down list
-  }
-}
-
-//delete func
+//delete func also left over from LL but also works dandy
 void Delete(Node*& head, Node* prev, Node* current, int ID){
 
   if(current == head){ //first call
