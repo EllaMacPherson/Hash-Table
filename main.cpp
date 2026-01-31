@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <cstring>
+#include <string>
 #include <iomanip>
 #include <fstream>
 #include <random>
@@ -35,14 +36,13 @@ int main(){
 
   //fill table with NULL head pointers
   for(int i = 0; i < size; i++){
-
     hashtable[i] = NULL;
   }
 
 
   
   
-  char input[10];
+  string input;
   bool go = true;
 
   //start with list empty
@@ -51,22 +51,25 @@ int main(){
   //loop forever
   while (go == true){
     //clear input
-    
-    input[0] = '\0';
-    cout<<"Enter ADD, DELETE, PRINT or QUIT "<<endl;
-    cin>>input;
-    cin.ignore();
+    input.clear();
+
+    cout<<"Enter ADD, DELETE, PRINT, RANDOM or QUIT "<<endl;
+
+    getline(cin, input);
+
     
     // insert new manual data into hash table
-    if(strcmp(input, "ADD") == 0) {
+    if(input == "ADD") {
       //They want to add so collect all inputs
       float inGPA = 0;
-      char inName[15];
+      string inName;
       int inID;
-  
+
+      
       cout<<"Name of student? ";
-      cin.get(inName, 50);
-      cin.ignore();
+
+      getline(cin, inName);
+
       cout<<"ID of student? ";
       cin>>inID;      
       cin.ignore();
@@ -80,21 +83,22 @@ int main(){
     }
 
     //print
-    if(strcmp(input, "PRINT") == 0){
+    if(input =="PRINT"){
       //      print(head, head);
       //      cout<<"got print command.. about to call print"<<endl;
       printHT(hashtable, size);
     }
 
-    if(strcmp(input, "RANDOM") == 0){
+    if(input == "RANDOM"){
       int num;
       cout<<"How many students would you like to add?"<<endl;
       cin>>num;
+      cin.ignore();
       randomAdd(num, size, hashtable);
     }
     
     //delete
-    if(strcmp(input, "DELETE") == 0){
+    if(input == "DELETE" ){
       //gather input
       cout<<"Enter student ID to delete"<<endl;
       int ID = 0;
@@ -105,7 +109,7 @@ int main(){
     }
     
     //Quit program
-    if(strcmp(input, "QUIT") == 0){
+    if(input == "QUIT"){
 
       //iterate through
       while(head != NULL){
@@ -123,12 +127,14 @@ int main(){
 void randomAdd(int num, int size, Node**& hashtable){
   //repeat this for # of people wanted to be added to program
 
-  ifstream firstFile("first.txt");
-  ifstream lastFile("last.txt");
+
 
   for(int i; i < num; i++){
     //randomly generate 1 # for first name and another # for last
     //random generator set up..
+    ifstream firstFile("first.txt");
+    ifstream lastFile("last.txt");
+
     random_device rd;
     mt19937 gen(rd());
 
@@ -139,21 +145,48 @@ void randomAdd(int num, int size, Node**& hashtable){
     //generate name!!!
     int first = idDist(gen);
     int last = idDist(gen);
+    //    cout<<"first random number index: " <<first<<endl;
+    //    cout<<"second random number index: " <<last<<endl;
 
     //keeping it in cstring cause whole project built around it..
-    char Fname[30];
-    char Lname[30];
-    char fullName[100];
+
+    string firstname = "";
+    string lastname = "";
 
 
+    int current = 0;
 
-    firstFile.getline(Fname, first);
-    lastFile.getline(Lname,last);
+    // If you want 1-based indexing (line 1 = first line), keep this
+    // If you want 0-based (line 0 = first line), change to current < targetIndex
+    while (current < first && getline(firstFile, firstname)) {
+        ++current;
+    }
 
-    strcpy(fullName, Fname);
-    strcat(fullName, " "); //put space at end
-    strcat(fullName, Lname); //last name after space
+    if (current == first) {
+      getline(firstFile, firstname);
+    }
 
+    //    cout<<"current: "<<current<<endl; 
+    //cout<<"first name with that number : " <<firstname<<endl;
+    
+    int currentLast = 0;
+    while (currentLast < last && getline(lastFile, lastname)) {
+        ++currentLast;
+    }
+
+    if (currentLast == last) {
+      getline(lastFile, lastname);
+    }
+
+    //    cout<<"lastindex: "<<currentLast<<endl; 
+
+    //    cout<<"lastname with that number: " <<lastname<<endl;
+
+
+    
+    string fullName = "";
+    fullName = firstname + " " + lastname;
+    //    cout<<"Full name: " <<fullName<<endl;
     
     //incremental ID
     int ID = 423000 + i;
@@ -161,12 +194,14 @@ void randomAdd(int num, int size, Node**& hashtable){
     //randomly generate a GPA
     float GPA = GPAdist(gen);
 
+    //    cout<<"ADDING STUDENT"<<endl;
     //make a new student with all this info
     student* s = new student(GPA, fullName, ID);
 
     //feed into insert func
     insert(hashtable, s, size);
   }
+  return;
 
 }
 
@@ -269,6 +304,8 @@ void printHT(Node**& hashtable, int& size){
     Node* current;
     if(hashtable[i] != NULL){ //if theres something there print it!
       //cout<<"SOMETHING HERE!"<<endl;
+
+      
       cout<< hashtable[i]->getStudent()->getName()<<" "<<
 	hashtable[i]->getStudent()->getID()<< " " <<
 	hashtable[i]->getStudent()->getGPA();

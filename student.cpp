@@ -1,18 +1,18 @@
 #include "student.h"
 #include <iostream>
-#include <cstring>
+
+#include<string>
 
 
 //constructur
-student::student(float inGPA, char* inName, int inID){
+student::student(float inGPA, string inName, int inID){
   gpa = inGPA;
   id = inID;
-  name = new char[50];
-  strcpy(name, inName);
+  name = inName;
 }
 
 //give name
-char* student::getName(){
+string student::getName(){
   return name;
 }
 
