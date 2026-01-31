@@ -1,4 +1,4 @@
-/* Ella MacPherson 2/23/25
+/* Ella MacPherson 2/13/25
    Hash Tables
 */
 
@@ -14,9 +14,9 @@
 using namespace std;
 
 // remenant linked list code
-void add(Node*& head, Node* prev, Node* current, student* student);
-void print(Node*& head, Node* next);
-void Delete(Node*& head, Node* prev, Node* current, int ID);
+void add(Node*& head, Node* prev, Node* current, student* student); //USES!!
+void print(Node*& head, Node* next); //doesnt use atm
+void Delete(Node*& head, Node* prev, Node* current, int ID); //USES!!!
 
 //for hashtable
 void insert(Node**& hashtable, student* newStudent, int& size); 
@@ -24,7 +24,7 @@ int hashFunc(int ID, int& size);
 void printHT(Node**& hashtable, int& size);
 void rehash(Node**& hashtable, student* newStudent, int& size);
 void randomAdd(int num, int size, Node**& hashtable);
-
+void deleteHT(Node**& hashtable, int& size, int xID);
 
 
 int main(){
@@ -84,8 +84,6 @@ int main(){
 
     //print
     if(input =="PRINT"){
-      //      print(head, head);
-      //      cout<<"got print command.. about to call print"<<endl;
       printHT(hashtable, size);
     }
 
@@ -103,9 +101,9 @@ int main(){
       cout<<"Enter student ID to delete"<<endl;
       int ID = 0;
       cin>>ID;
-
+      cin.ignore();
       //delete function
-      Delete(head, NULL, head, ID);
+      deleteHT(hashtable, size, ID);
     }
     
     //Quit program
@@ -124,6 +122,22 @@ int main(){
   }
 }
 
+void deleteHT(Node**& hashtable, int& size, int deleteID){
+  //iterate through hashtable
+  int index = hashFunc(deleteID, size);
+  
+  for(int i = 0; i < size; i++){
+    if(i == index){ //check 1st
+      Delete(hashtable[i], NULL, hashtable[i], deleteID);
+    }
+  }
+  
+  return;
+
+}
+
+
+//randomly adds x number of students. 1 in like 100 end up with only first name -> ASK GALBRATITH
 void randomAdd(int num, int size, Node**& hashtable){
   //repeat this for # of people wanted to be added to program
 
@@ -139,7 +153,7 @@ void randomAdd(int num, int size, Node**& hashtable){
     mt19937 gen(rd());
 
 
-    uniform_int_distribution<int> idDist(1, 100);
+    uniform_int_distribution<int> idDist(1, 99);
     uniform_real_distribution<float> GPAdist(0.0f, 4.0f);
 
     //generate name!!!
@@ -189,7 +203,7 @@ void randomAdd(int num, int size, Node**& hashtable){
     //    cout<<"Full name: " <<fullName<<endl;
     
     //incremental ID
-    int ID = 423000 + i;
+    int ID = 400201 + (3*i);
     
     //randomly generate a GPA
     float GPA = GPAdist(gen);
@@ -249,10 +263,15 @@ int hashFunc(int ID, int& size){
   return index;
 }
 
+//often overloads again and again if you add to much and then program just aborts
+//if i add 1 person in the beginning, and then add the max (300), it clears away the first 1!!!
+//always rehashes twice on first force ADD 300 + man add 1
+//THE SIZE IS FIXED AT 100 BUCKETS??????
 void rehash(Node**& currentHT, student* newStudent, int& size){
   int oldSize = size;
   //  cout<<"rehash RUNING"<<endl;
   size = (size * 2) + 1;
+  cout<<"rehashing to size: "<<size<<endl;
   //cout<<"new array size: " << size<< endl;
   
   Node** newHT;
@@ -288,38 +307,48 @@ void rehash(Node**& currentHT, student* newStudent, int& size){
   //cout<<"setting currentHT equal to the new one js created"<<endl;
   //update current hashtable to be this new hashtable
   currentHT = newHT;
-  cout<<"rehash done"<<endl;
+  //  cout<<"rehash done"<<endl;
 
 }
 
 
 void printHT(Node**& hashtable, int& size){
   //cout<<"running printHT"<<endl;
-  //cout<<"size: "<<size<<endl;
+
   
   for(int i = 0; i < size; i++){
     //  cout<<"for loop iteration: " << i <<endl;
     //THERE MUST BE A BETTER WAY????? do i have to use recursion??
     //    cout<<"iteration: "<< i <<endl;
+
+    cout << fixed << setprecision(2);
+
     Node* current;
     if(hashtable[i] != NULL){ //if theres something there print it!
       //cout<<"SOMETHING HERE!"<<endl;
-
-      
+      cout<<i<<" ";
+      cout<<"1.  ";
       cout<< hashtable[i]->getStudent()->getName()<<" "<<
 	hashtable[i]->getStudent()->getID()<< " " <<
 	hashtable[i]->getStudent()->getGPA();
-      if(hashtable[i]->getNext() != NULL){ //2nd one in LL 
-	cout<<hashtable[i]->getNext()->getStudent()->getName()<< " ";
+      if(hashtable[i]->getNext() != NULL){ //2nd one in LL
+	cout<<"   2.  ";
+	cout<<hashtable[i]->getNext()->getStudent()->getName()<< " "<<
+	  hashtable[i]->getNext()->getStudent()->getID()<< " " <<
+	  hashtable[i]->getNext()->getStudent()->getGPA();
 	current = hashtable[i]->getNext();
 	if(current->getNext() != NULL){ //3rd one in LL
-	  cout<<current->getNext()->getStudent()->getName();
+	  cout<<"  3.  ";
+	  cout<<current->getNext()->getStudent()->getName()<<" " <<
+	    hashtable[i]->getNext()->getStudent()->getID()<< " " <<
+	    hashtable[i]->getNext()->getStudent()->getGPA();
 	}
       }
       cout<<endl;
     }
     
   }
+  //  cout<<"size: "<<size<<endl;
 }
 
 
