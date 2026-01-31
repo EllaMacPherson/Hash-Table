@@ -5,6 +5,8 @@
 #include <iostream>
 #include <cstring>
 #include <iomanip>
+#include <fstream>
+#include <random>
 #include "Node.h"
 #include "Student.h"
 
@@ -20,6 +22,8 @@ void insert(Node**& hashtable, student* newStudent, int& size);
 int hashFunc(int ID, int& size);
 void printHT(Node**& hashtable, int& size);
 void rehash(Node**& hashtable, student* newStudent, int& size);
+void randomAdd(int num, int size, Node**& hashtable);
+
 
 
 int main(){
@@ -61,7 +65,7 @@ int main(){
       int inID;
   
       cout<<"Name of student? ";
-      cin.get(inName, 14);
+      cin.get(inName, 50);
       cin.ignore();
       cout<<"ID of student? ";
       cin>>inID;      
@@ -78,10 +82,17 @@ int main(){
     //print
     if(strcmp(input, "PRINT") == 0){
       //      print(head, head);
-      cout<<"got print command.. about to call print"<<endl;
+      //      cout<<"got print command.. about to call print"<<endl;
       printHT(hashtable, size);
     }
 
+    if(strcmp(input, "RANDOM") == 0){
+      int num;
+      cout<<"How many students would you like to add?"<<endl;
+      cin>>num;
+      randomAdd(num, size, hashtable);
+    }
+    
     //delete
     if(strcmp(input, "DELETE") == 0){
       //gather input
@@ -108,6 +119,57 @@ int main(){
     }
   }
 }
+
+void randomAdd(int num, int size, Node**& hashtable){
+  //repeat this for # of people wanted to be added to program
+
+  ifstream firstFile("first.txt");
+  ifstream lastFile("last.txt");
+
+  for(int i; i < num; i++){
+    //randomly generate 1 # for first name and another # for last
+    //random generator set up..
+    random_device rd;
+    mt19937 gen(rd());
+
+
+    uniform_int_distribution<int> idDist(1, 100);
+    uniform_real_distribution<float> GPAdist(0.0f, 4.0f);
+
+    //generate name!!!
+    int first = idDist(gen);
+    int last = idDist(gen);
+
+    //keeping it in cstring cause whole project built around it..
+    char Fname[30];
+    char Lname[30];
+    char fullName[100];
+
+
+
+    firstFile.getline(Fname, first);
+    lastFile.getline(Lname,last);
+
+    strcpy(fullName, Fname);
+    strcat(fullName, " "); //put space at end
+    strcat(fullName, Lname); //last name after space
+
+    
+    //incremental ID
+    int ID = 423000 + i;
+    
+    //randomly generate a GPA
+    float GPA = GPAdist(gen);
+
+    //make a new student with all this info
+    student* s = new student(GPA, fullName, ID);
+
+    //feed into insert func
+    insert(hashtable, s, size);
+  }
+
+}
+
 
 void insert(Node**& hashtable, student* s, int& size){
   //  cout<<"insert func running"<<endl;
@@ -154,9 +216,9 @@ int hashFunc(int ID, int& size){
 
 void rehash(Node**& currentHT, student* newStudent, int& size){
   int oldSize = size;
-  cout<<"rehash RUNING"<<endl;
+  //  cout<<"rehash RUNING"<<endl;
   size = (size * 2) + 1;
-  cout<<"new array size: " << size<< endl;
+  //cout<<"new array size: " << size<< endl;
   
   Node** newHT;
   newHT = new Node*[size];
@@ -166,7 +228,7 @@ void rehash(Node**& currentHT, student* newStudent, int& size){
   }
 
   //iniialize it with old current HT
-  cout<<"reinitalizing array"<<endl;
+  //cout<<"reinitalizing array"<<endl;
   
   for(int i = 0; i < oldSize; i++){
     if(currentHT[i] != NULL){    //if theres something there
@@ -184,14 +246,14 @@ void rehash(Node**& currentHT, student* newStudent, int& size){
   }
 
 
-  cout<<"adding new student manually"<<endl;
+  // cout<<"adding new student manually"<<endl;
   //add student that needed to be added initially...!
   insert(newHT, newStudent, size);
 
-  cout<<"setting currentHT equal to the new one js created"<<endl;
+  //cout<<"setting currentHT equal to the new one js created"<<endl;
   //update current hashtable to be this new hashtable
   currentHT = newHT;
-  cout<<"rehash complete"<<endl;
+  cout<<"rehash done"<<endl;
 
 }
 
@@ -207,7 +269,9 @@ void printHT(Node**& hashtable, int& size){
     Node* current;
     if(hashtable[i] != NULL){ //if theres something there print it!
       //cout<<"SOMETHING HERE!"<<endl;
-      cout<<"List: " << hashtable[i]->getStudent()->getName()<<" ";
+      cout<< hashtable[i]->getStudent()->getName()<<" "<<
+	hashtable[i]->getStudent()->getID()<< " " <<
+	hashtable[i]->getStudent()->getGPA();
       if(hashtable[i]->getNext() != NULL){ //2nd one in LL 
 	cout<<hashtable[i]->getNext()->getStudent()->getName()<< " ";
 	current = hashtable[i]->getNext();

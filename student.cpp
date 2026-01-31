@@ -7,7 +7,7 @@
 student::student(float inGPA, char* inName, int inID){
   gpa = inGPA;
   id = inID;
-  name = new char[20];
+  name = new char[50];
   strcpy(name, inName);
 }
 
